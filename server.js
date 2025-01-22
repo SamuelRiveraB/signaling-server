@@ -29,9 +29,9 @@ io.on("connection", (socket) => {
   // Relay signaling messages
   socket.on("offer", ({ target, offer }) => {
     console.log(`Offer received from ${socket.id} to ${target}`);
-    const targetSocket = Object.keys(peers).find((key) => peers[key] === target);
+    const targetSocket = Object.keys(peers).find((key) => peers[key].userId === target);
     if (targetSocket) {
-      io.to(targetSocket).emit("offer", { offer, sender: peers[socket.id] });
+      io.to(targetSocket).emit("offer", { offer, sender: peers[socket.id].userId });
       console.log("Offer sent to:", targetSocket);
     } else {
       console.log(`Target ${target} not found`);
@@ -40,17 +40,17 @@ io.on("connection", (socket) => {
 
   // Handle call rejection
   socket.on("call-rejected", ({ target }) => {
-    const targetSocket = Object.keys(peers).find((key) => peers[key] === target);
+    const targetSocket = Object.keys(peers).find((key) => peers[key].userId === target);
     if (targetSocket) {
       io.to(targetSocket).emit("call-rejected");
-      console.log(`Call rejected by ${peers[socket.id]} to ${target}`);
+      console.log(`Call rejected by ${peers[socket.id].userId} to ${target}`);
     }
   });
 
   // Relay answer signaling
   socket.on("answer", ({ target, answer }) => {
     console.log(`Answer received from ${socket.id} to ${target}`);
-    const targetSocket = Object.keys(peers).find((key) => peers[key] === target);
+    const targetSocket = Object.keys(peers).find((key) => peers[key].userId === target);
     if (targetSocket) {
       io.to(targetSocket).emit("answer", { answer });
       console.log("Answer sent to:", targetSocket);
@@ -62,7 +62,7 @@ io.on("connection", (socket) => {
   // Relay ICE candidates
   socket.on("ice-candidate", ({ target, candidate }) => {
     console.log(`ICE candidate received from ${socket.id} to ${target}`);
-    const targetSocket = Object.keys(peers).find((key) => peers[key] === target);
+    const targetSocket = Object.keys(peers).find((key) => peers[key].userId === target);
     if (targetSocket) {
       io.to(targetSocket).emit("ice-candidate", { candidate });
       console.log("ICE candidate sent to:", targetSocket);
@@ -74,12 +74,12 @@ io.on("connection", (socket) => {
   // Handle call end
   socket.on("call-ended", ({ target }) => {
     // Find the target socket ID using the target user ID
-    const targetSocket = Object.keys(peers).find((key) => peers[key] === target);
+    const targetSocket = Object.keys(peers).find((key) => peers[key].userId === target);
   
     if (targetSocket) {
       // Emit the "call-ended" event to the target peer
-      io.to(targetSocket).emit("call-ended", { target: target });
-      console.log(`Call ended by ${peers[socket.id]} with ${target}`);
+      io.to(targetSocket).emit("call-ended", { target });
+      console.log(`Call ended by ${peers[socket.id].userId} with ${target}`);
     } else {
       console.log("Target socket not found for call end.");
     }
@@ -183,6 +183,30 @@ io.on("connection", (socket) => {
         }
       });
     }
+  });
+
+  socket.on("cancel-service", ({ clientId, technicianId }) => {
+    const clientSocket = Object.keys(peers).find(
+      (id) => peers[id].userId === clientId
+    );
+    const technicianSocket = Object.keys(peers).find(
+      (id) => peers[id].userId === technicianId
+    );
+
+    if (peers[technicianSocket]) {
+      peers[technicianSocket].available = true;
+    }
+
+    io.to(clientSocket).emit("service-cancelled", {
+      message: "The job has been cancelled!",
+    });
+    io.to(technicianSocket).emit("service-cancelled", {
+      message: "Job Cancelled!",
+    });
+
+    console.log(
+      `Job between client ${clientId} and technician ${technicianId} was cancelled.`
+    );
   });
 
   socket.on("end-service", ({ clientId, technicianId }) => {
