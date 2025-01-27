@@ -162,7 +162,7 @@ io.on("connection", (socket) => {
 
       const clientLocation = peers[clientSocket]?.location;
       console.log(
-        `Technician ${technicianId} accepted the job from ${clientId} at location ${clientLocation.lat} ${clientLocation.lng}`
+        `Technician ${technicianId} accepted the job from ${clientId} at location ${clientLocation.latitude} ${clientLocation.longitude}`
       );
     } else if (response === "reject") {
       io.to(clientSocket).emit("hire-rejected", {
