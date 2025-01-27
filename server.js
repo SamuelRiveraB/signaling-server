@@ -11,13 +11,13 @@ io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
   // Register a peer
-  socket.on("register", async ({ id, role, firstName, lastName, address, socketId, photo, company, rating, location, jobId }) => {
+  socket.on("register", async ({ id, role, firstName, lastName, address, socketId, photo, serviceName, company, rating, location, services, jobId }) => {
     const data = { id, role, firstName, lastName, socketId, photo, location };
     if(role === "user") {
-      peers[socket.id] = { ...data, address};
+      peers[socket.id] = { ...data, address, serviceName};
     }
     else if(role === "technician") {
-      peers[socket.id] = { ...data, available: false, company, rating, jobId };
+      peers[socket.id] = { ...data, available: false, company, rating, services, jobId };
     }
     console.log(`Registered ${role}:`, socketId);
     console.log("Peers:", peers);
