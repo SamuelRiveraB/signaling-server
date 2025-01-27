@@ -118,12 +118,11 @@ io.on("connection", (socket) => {
         (id) => peers[id].socketId === clientId
       );
 
-      const clientLocation = peers[clientSocket]?.location;
+      const clientData = peers[clientSocket];
 
-      if (clientLocation) {
+      if (clientData) {
         io.to(technicianSocket).emit("hire-request", {
-          clientId,
-          location: clientLocation,
+          ...clientData,
         });
 
         console.log(
