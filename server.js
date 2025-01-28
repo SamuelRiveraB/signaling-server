@@ -91,6 +91,13 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("call-cancelled", ({ target }) => {
+    const targetSocket = Object.keys(peers).find((key) => peers[key].socketId === target);
+    if (targetSocket) {
+      targetSocket.emit("call-cancelled", { target: targetSocket });
+    }
+  });
+
   // LOCATION ---------------------------------------------------
 
   socket.on("send-location", (location) => {
