@@ -94,7 +94,10 @@ io.on("connection", (socket) => {
   socket.on("call-cancelled", ({ target }) => {
     const targetSocket = Object.keys(peers).find((key) => peers[key].socketId === target);
     if (targetSocket) {
-      targetSocket.emit("call-cancelled", { target: targetSocket });
+      io.to(targetSocket).emit("call-cancelled", { target });
+      console.log(`Call cancelled by ${peers[socket.id].socketId} with ${target}`);
+    } else {
+      console.log("Target socket not found for call cancel.");
     }
   });
 
