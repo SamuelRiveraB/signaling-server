@@ -11,13 +11,13 @@ io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
   // Register a peer
-  socket.on("register", async ({ id, role, firstName, lastName, address, socketId, photo, serviceId, serviceName, companyId, company, rating, reviews, location, services, jobId }) => {
+  socket.on("register", async ({ id, role, firstName, lastName, address, socketId, photo, serviceId, serviceName, companyId, company, rating, reviews, location, services }) => {
     const data = { id, role, firstName, lastName, socketId, photo, location };
     if(role === "user") {
       peers[socket.id] = { ...data, address, serviceId, serviceName};
     }
     else if(role === "technician") {
-      peers[socket.id] = { ...data, available: false, companyId, company, rating, reviews, services, jobId };
+      peers[socket.id] = { ...data, available: false, companyId, company, rating, reviews, services };
     }
     console.log(`Registered ${role}:`, socketId);
     console.log("Peers:", peers);
@@ -163,16 +163,19 @@ io.on("connection", (socket) => {
       (id) => peers[id].socketId === technicianId
     );
 
+    const technicianData = peers[technicianSocket];
+
+    if (!technicianData) {
+      console.log(`Technician ${technicianId} data is not available`);
+      return;
+    }
+
     if (response === "accept") {
-      if (peers[technicianSocket]) {
-        peers[technicianSocket].available = false;
-      }
+      peers[technicianSocket].available = false;
 
       io.to(clientSocket).emit("hire-accepted", {
-        technicianId,
+        ...technicianData,
       });
-
-      io.to(technicianSocket).emit("on-job", { clientId });
 
       io.to(technicianSocket).emit(
         "peer-list",
@@ -185,7 +188,7 @@ io.on("connection", (socket) => {
       );
     } else if (response === "reject") {
       io.to(clientSocket).emit("hire-rejected", {
-        technicianId,
+        ...technicianData,
       });
 
       console.log(
